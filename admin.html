@@ -19,6 +19,23 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        .debug-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .debug-info {
+            font-family: monospace;
+            font-size: 12px;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            color: #495057;
+            max-height: 200px;
+            overflow-y: auto;
+        }
         .data-table {
             background: white;
             padding: 20px;
@@ -56,17 +73,47 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        .refresh-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-started {
+            background: #fff3cd;
+            color: #856404;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>📊 Survey Timing Data</h1>
         <p>View and export timing data collected from survey participants</p>
+        <button class="refresh-btn" onclick="loadTimingData()">🔄 Refresh Data</button>
         <button class="export-btn" onclick="exportData()">📥 Export as CSV</button>
         <button class="clear-btn" onclick="clearData()">🗑️ Clear All Data</button>
     </div>
 
+    <div class="debug-section">
+        <h3>🔍 Debug Information</h3>
+        <div class="debug-info" id="debugInfo">Loading debug info...</div>
+    </div>
+
     <div class="data-table">
+        <h3>📋 Timing Records (<span id="recordCount">0</span> total)</h3>
         <table id="timingTable">
             <thead>
                 <tr>
@@ -77,11 +124,12 @@
                     <th>End Time</th>
                     <th>Duration (min)</th>
                     <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="timingTableBody">
                 <tr>
-                    <td colspan="7" style="text-align: center; color: #666;">Loading data...</td>
+                    <td colspan="8" style="text-align: center; color: #666;">Loading data...</td>
                 </tr>
             </tbody>
         </table>
@@ -89,119 +137,208 @@
 
     <script>
         function loadTimingData() {
+            console.log('🔄 Loading timing data...');
+            
             const tbody = document.getElementById('timingTableBody');
+            const debugDiv = document.getElementById('debugInfo');
+            const recordCountSpan = document.getElementById('recordCount');
+            
+            // Get ALL localStorage keys
+            const allKeys = Object.keys(localStorage);
+            console.log('All localStorage keys:', allKeys);
+            
+            // Find timing-related keys with multiple patterns
+            const timingKeys = allKeys.filter(key => 
+                key.includes('timing') || 
+                key.includes('survey') || 
+                key.startsWith('timing_') ||
+                key.startsWith('timingData_') ||
+                key.startsWith('survey_timing_')
+            );
+            
+            console.log('Found timing keys:', timingKeys);
+            
+            // Update debug info
+            const debugData = {
+                'Total localStorage Keys': allKeys.length,
+                'Timing-related Keys': timingKeys.length,
+                'All Keys': allKeys,
+                'Timing Keys': timingKeys,
+                'localStorage Size': JSON.stringify(localStorage).length,
+                'Current Time': new Date().toISOString()
+            };
+            
+            debugDiv.innerHTML = Object.entries(debugData)
+                .map(([key, value]) => `<strong>${key}:</strong> ${JSON.stringify(value, null, 2)}`)
+                .join('<br><br>');
+
             const timingData = [];
             
-            // Get all timing data from localStorage
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('timing_')) {
-                    try {
-                        const data = JSON.parse(localStorage.getItem(key));
-                        timingData.push(data);
-                    } catch (e) {
-                        console.error('Error parsing timing data:', e);
+            // Extract timing data from all relevant keys
+            timingKeys.forEach(key => {
+                try {
+                    const rawData = localStorage.getItem(key);
+                    console.log(`Processing key: ${key}, data:`, rawData);
+                    
+                    if (rawData) {
+                        const data = JSON.parse(rawData);
+                        // Ensure we have the minimum required fields
+                        if (data && (data.email || data.sessionId)) {
+                            timingData.push({
+                                ...data,
+                                storageKey: key // Add the storage key for reference
+                            });
+                        }
                     }
+                } catch (e) {
+                    console.error(`Error parsing data for key ${key}:`, e);
                 }
-            }
+            });
+
+            console.log('Processed timing data:', timingData);
+            recordCountSpan.textContent = timingData.length;
 
             if (timingData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666;">No timing data found</td></tr>';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #666;">
+                            No timing data found<br>
+                            <small>Debug: Found ${allKeys.length} localStorage keys, ${timingKeys.length} timing-related</small>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
 
             // Sort by timestamp (newest first)
-            timingData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            timingData.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
             // Display data
-            tbody.innerHTML = timingData.map(data => `
-                <tr>
-                    <td>${new Date(data.timestamp).toLocaleString()}</td>
-                    <td>${data.email}</td>
-                    <td>${data.sessionId.substr(-8)}</td>
-                    <td>${new Date(data.startTime).toLocaleString()}</td>
-                    <td>${data.endTime ? new Date(data.endTime).toLocaleString() : 'In Progress'}</td>
-                    <td>${data.timeTakenMinutes}</td>
-                    <td><span style="padding: 4px 8px; border-radius: 4px; background: ${data.status === 'completed' ? '#d4edda' : '#fff3cd'}; color: ${data.status === 'completed' ? '#155724' : '#856404'};">${data.status}</span></td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = timingData.map(data => {
+                const startTime = data.startTime ? new Date(data.startTime).toLocaleString() : 'Unknown';
+                const endTime = data.endTime ? new Date(data.endTime).toLocaleString() : 'In Progress';
+                const timestamp = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'Unknown';
+                
+                return `
+                    <tr>
+                        <td>${timestamp}</td>
+                        <td>${data.email || 'Unknown'}</td>
+                        <td title="${data.sessionId}">${(data.sessionId || 'Unknown').substr(-8)}</td>
+                        <td>${startTime}</td>
+                        <td>${endTime}</td>
+                        <td><strong>${data.timeTakenMinutes || '0.00'}</strong></td>
+                        <td><span class="status-badge status-${data.status || 'unknown'}">${data.status || 'unknown'}</span></td>
+                        <td>
+                            <button onclick="viewDetails('${data.storageKey}')" style="background: #17a2b8; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                                View
+                            </button>
+                            <button onclick="deleteRecord('${data.storageKey}')" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function viewDetails(storageKey) {
+            try {
+                const data = JSON.parse(localStorage.getItem(storageKey));
+                alert(`Detailed Data for ${storageKey}:\n\n${JSON.stringify(data, null, 2)}`);
+            } catch (e) {
+                alert('Error viewing details: ' + e.message);
+            }
+        }
+
+        function deleteRecord(storageKey) {
+            if (confirm(`Delete timing record: ${storageKey}?`)) {
+                localStorage.removeItem(storageKey);
+                loadTimingData(); // Refresh display
+                alert('Record deleted successfully');
+            }
         }
 
         function exportData() {
-            const tracker = new SurveyTimingTracker();
-            tracker.exportTimingData();
+            console.log('📥 Exporting data...');
+            
+            const timingData = [];
+            const allKeys = Object.keys(localStorage);
+            
+            // Find all timing-related keys
+            const timingKeys = allKeys.filter(key => 
+                key.includes('timing') || 
+                key.includes('survey')
+            );
+            
+            timingKeys.forEach(key => {
+                try {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    if (data && (data.email || data.sessionId)) {
+                        timingData.push(data);
+                    }
+                } catch (e) {
+                    console.error('Error parsing data for export:', e);
+                }
+            });
+
+            if (timingData.length === 0) {
+                alert('No timing data found to export');
+                return;
+            }
+
+            // Create CSV
+            const headers = ['Timestamp', 'Email', 'Session ID', 'Start Time', 'End Time', 'Time Taken (seconds)', 'Time Taken (minutes)', 'Device Info', 'Status'];
+            const csvContent = [
+                headers.join(','),
+                ...timingData.map(row => [
+                    row.timestamp || '',
+                    row.email || '',
+                    row.sessionId || '',
+                    row.startTime || '',
+                    row.endTime || '',
+                    row.timeTakenSeconds || 0,
+                    row.timeTakenMinutes || '0.00',
+                    `"${(row.deviceInfo || '').replace(/"/g, '""')}"`,
+                    row.status || ''
+                ].join(','))
+            ].join('\n');
+
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `survey_timing_data_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            console.log('✅ Export completed');
         }
 
         function clearData() {
-            if (confirm('Are you sure you want to clear all timing data? This cannot be undone.')) {
-                // Remove all timing data from localStorage
-                const keysToRemove = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('timing_')) {
-                        keysToRemove.push(key);
-                    }
-                }
+            if (confirm('Are you sure you want to clear ALL timing data? This cannot be undone.')) {
+                const allKeys = Object.keys(localStorage);
+                const timingKeys = allKeys.filter(key => 
+                    key.includes('timing') || 
+                    key.includes('survey')
+                );
                 
-                keysToRemove.forEach(key => localStorage.removeItem(key));
+                timingKeys.forEach(key => localStorage.removeItem(key));
                 loadTimingData(); // Refresh display
-                alert('All timing data has been cleared.');
+                alert(`Cleared ${timingKeys.length} timing records.`);
             }
         }
 
-        // Include the SurveyTimingTracker class
-        class SurveyTimingTracker {
-            exportTimingData() {
-                const timingData = [];
-                
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('timing_')) {
-                        try {
-                            const data = JSON.parse(localStorage.getItem(key));
-                            timingData.push(data);
-                        } catch (e) {
-                            console.error('Error parsing timing data:', e);
-                        }
-                    }
-                }
-
-                if (timingData.length === 0) {
-                    alert('No timing data found');
-                    return;
-                }
-
-                const headers = ['Timestamp', 'Email', 'Session ID', 'Start Time', 'End Time', 'Time Taken (seconds)', 'Time Taken (minutes)', 'Device Info', 'Status'];
-                const csvContent = [
-                    headers.join(','),
-                    ...timingData.map(row => [
-                        row.timestamp,
-                        row.email,
-                        row.sessionId,
-                        row.startTime,
-                        row.endTime,
-                        row.timeTakenSeconds,
-                        row.timeTakenMinutes,
-                        `"${row.deviceInfo}"`,
-                        row.status
-                    ].join(','))
-                ].join('\n');
-
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `survey_timing_data_${new Date().toISOString().split('T')[0]}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }
-        }
+        // Auto-refresh every 10 seconds
+        setInterval(loadTimingData, 10000);
 
         // Load data when page loads
-        document.addEventListener('DOMContentLoaded', loadTimingData);
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Admin panel loaded');
+            loadTimingData();
+        });
     </script>
 </body>
 </html>
-
