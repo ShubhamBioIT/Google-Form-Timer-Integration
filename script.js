@@ -3,7 +3,7 @@
 // Configuration
 const CONFIG = {
     GOOGLE_FORM_ID: '1FAIpQLSe98h8JuwgdzUlauVykobND66yGuOqiEEpyl913QP4NJ40DrA',
-    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxTmtpALKDBkgX2MAbm6Yu5lHisdXX-AjqXM6CxZfBnWTKNs7Vt4aP-_paodq3NPPTInQ/exec', // Replace with your script URL
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwyzzoYLrbZ0syexcbuL5gkmuwrRG2J72VM-UIZHfyeDesa3s-CkXhu8CcB0w5AiFl6Ug/exec', // Replace with your script URL
     MAX_SURVEY_TIME: 1800, // 30 minutes maximum
     STORAGE_PREFIX: 'survey_timing_'
 };
