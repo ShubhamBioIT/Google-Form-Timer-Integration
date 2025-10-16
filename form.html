@@ -276,41 +276,37 @@
             window.location.href = returnUrl;
         }
 
-        function recordTimingData(sessionId, startTime, endTime, totalSeconds) {
-            // This function would send timing data to Google Sheets
-            // You can implement this using Google Apps Script Web App or Google Sheets API
-            
-            const timingData = {
-                sessionId: sessionId,
-                startTime: startTime.toISOString(),
-                endTime: endTime.toISOString(),
-                totalSeconds: totalSeconds,
-                userAgent: navigator.userAgent,
-                screenSize: `${screen.width}x${screen.height}`,
-                timestamp: new Date().toISOString()
-            };
+function recordTimingData(sessionId, startTime, endTime, totalSeconds) {
+    // This function sends timing data to Google Sheets
+    const timingData = {
+        sessionId: sessionId,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        timeTakenSeconds: totalSeconds,
+        timeTakenMinutes: (totalSeconds / 60).toFixed(2),
+        userAgent: navigator.userAgent,
+        screenSize: `${screen.width}x${screen.height}`
+    };
 
-            // Option 1: Send to Google Apps Script Web App
-            const scriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL'; // Replace with your script URL
-            
-            fetch(scriptUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(timingData)
-            }).then(() => {
-                console.log('Timing data sent successfully');
-            }).catch((error) => {
-                console.error('Error sending timing data:', error);
-                // Store locally as backup
-                localStorage.setItem('timingData_' + sessionId, JSON.stringify(timingData));
-            });
+    // Send to Google Apps Script Web App
+    fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec', { // Replace with your Web App URL
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'recordTiming',
+            ...timingData
+        })
+    }).then(response => {
+        console.log('Timing data sent successfully:', response.status);
+    }).catch(error => {
+        console.error('Error sending timing data:', error);
+        // Store locally as backup
+        localStorage.setItem('timingData_' + sessionId, JSON.stringify(timingData));
+    });
+}
 
-            // Option 2: Use Google Sheets API (requires API key)
-            // Implementation would go here if you prefer direct API access
-        }
     </script>
 </body>
 </html>
