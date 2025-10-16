@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Timing Data - Admin</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .data-table {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .export-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Survey Timing Data</h1>
+        <p>View and export timing data collected from survey participants</p>
+        <button class="export-btn" onclick="exportData()">📥 Export as CSV</button>
+        <button class="clear-btn" onclick="clearData()">🗑️ Clear All Data</button>
+    </div>
+
+    <div class="data-table">
+        <table id="timingTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Email</th>
+                    <th>Session ID</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration (min)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="timingTableBody">
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #666;">Loading data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function loadTimingData() {
+            const tbody = document.getElementById('timingTableBody');
+            const timingData = [];
+            
+            // Get all timing data from localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('timing_')) {
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+                        timingData.push(data);
+                    } catch (e) {
+                        console.error('Error parsing timing data:', e);
+                    }
+                }
+            }
+
+            if (timingData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666;">No timing data found</td></tr>';
+                return;
+            }
+
+            // Sort by timestamp (newest first)
+            timingData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            // Display data
+            tbody.innerHTML = timingData.map(data => `
+                <tr>
+                    <td>${new Date(data.timestamp).toLocaleString()}</td>
+                    <td>${data.email}</td>
+                    <td>${data.sessionId.substr(-8)}</td>
+                    <td>${new Date(data.startTime).toLocaleString()}</td>
+                    <td>${data.endTime ? new Date(data.endTime).toLocaleString() : 'In Progress'}</td>
+                    <td>${data.timeTakenMinutes}</td>
+                    <td><span style="padding: 4px 8px; border-radius: 4px; background: ${data.status === 'completed' ? '#d4edda' : '#fff3cd'}; color: ${data.status === 'completed' ? '#155724' : '#856404'};">${data.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function exportData() {
+            const tracker = new SurveyTimingTracker();
+            tracker.exportTimingData();
+        }
+
+        function clearData() {
+            if (confirm('Are you sure you want to clear all timing data? This cannot be undone.')) {
+                // Remove all timing data from localStorage
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('timing_')) {
+                        keysToRemove.push(key);
+                    }
+                }
+                
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+                loadTimingData(); // Refresh display
+                alert('All timing data has been cleared.');
+            }
+        }
+
+        // Include the SurveyTimingTracker class
+        class SurveyTimingTracker {
+            exportTimingData() {
+                const timingData = [];
+                
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('timing_')) {
+                        try {
+                            const data = JSON.parse(localStorage.getItem(key));
+                            timingData.push(data);
+                        } catch (e) {
+                            console.error('Error parsing timing data:', e);
+                        }
+                    }
+                }
+
+                if (timingData.length === 0) {
+                    alert('No timing data found');
+                    return;
+                }
+
+                const headers = ['Timestamp', 'Email', 'Session ID', 'Start Time', 'End Time', 'Time Taken (seconds)', 'Time Taken (minutes)', 'Device Info', 'Status'];
+                const csvContent = [
+                    headers.join(','),
+                    ...timingData.map(row => [
+                        row.timestamp,
+                        row.email,
+                        row.sessionId,
+                        row.startTime,
+                        row.endTime,
+                        row.timeTakenSeconds,
+                        row.timeTakenMinutes,
+                        `"${row.deviceInfo}"`,
+                        row.status
+                    ].join(','))
+                ].join('\n');
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `survey_timing_data_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadTimingData);
+    </script>
+</body>
+</html>
+
