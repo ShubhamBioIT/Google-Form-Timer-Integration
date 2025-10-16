@@ -4,139 +4,355 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Research Survey - Timed Form</title>
-    <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            min-height: 100vh;
+        }
+
+        .hero-section {
+            text-align: center;
+            color: white;
+            padding: 40px 0;
+        }
+
+        .hero-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            font-weight: 300;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .instructions-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .instructions-card h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: #333;
+            text-align: center;
+        }
+
+        .email-input-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+
+        .email-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .email-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .email-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .email-help {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .start-button {
+            background: linear-gradient(135deg, #34a853, #0f9d58);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 0 auto;
+            box-shadow: 0 8px 25px rgba(52, 168, 83, 0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(52, 168, 83, 0.5);
+        }
+
+        .start-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .timer-info {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: none;
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .success-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #34a853;
+        }
+
+        .modal-content h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .completion-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #5f6368;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1967d2;
+        }
+
+        .close-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.5rem; }
+            .instructions-card { padding: 25px; }
+            .completion-stats { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- Hero Section -->
         <div class="hero-section">
-            <div class="hero-content">
-                <div class="hero-icon">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-                <h1 class="hero-title">Research Survey</h1>
-                <p class="hero-subtitle">Help us improve by sharing your valuable feedback</p>
-                <div class="hero-features">
-                    <div class="feature-item">
-                        <i class="fas fa-clock"></i>
-                        <span>5-10 minutes</span>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Anonymous & Secure</span>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-mobile-alt"></i>
-                        <span>Mobile Friendly</span>
-                    </div>
-                </div>
+            <div class="hero-icon">
+                <i class="fas fa-clipboard-list"></i>
             </div>
+            <h1 class="hero-title">Research Survey</h1>
+            <p class="hero-subtitle">Help us improve by sharing your valuable feedback</p>
         </div>
 
-        <!-- Instructions Section -->
-        <div class="instructions-section">
-            <div class="instructions-card">
-                <h2><i class="fas fa-info-circle"></i> How it works</h2>
-                <div class="instructions-grid">
-                    <div class="instruction-item">
-                        <div class="instruction-number">1</div>
-                        <div class="instruction-content">
-                            <h3>Start Survey</h3>
-                            <p>Click the button below to begin. Timer starts automatically.</p>
-                        </div>
-                    </div>
-                    <div class="instruction-item">
-                        <div class="instruction-number">2</div>
-                        <div class="instruction-content">
-                            <h3>Complete Form</h3>
-                            <p>Fill out all required fields at your own pace.</p>
-                        </div>
-                    </div>
-                    <div class="instruction-item">
-                        <div class="instruction-number">3</div>
-                        <div class="instruction-content">
-                            <h3>Submit & Return</h3>
-                            <p>Submit the form and return here to see your completion time.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Action Section -->
-        <div class="action-section">
-            <div class="privacy-notice">
-                <i class="fas fa-lock"></i>
-                <p>Your completion time will be recorded for research purposes. All responses are confidential.</p>
-            </div>
+        <div class="instructions-card">
+            <h2><i class="fas fa-info-circle"></i> Survey Instructions</h2>
             
-            <button id="startSurveyBtn" class="start-button">
-                <i class="fas fa-play"></i>
-                <span>Start Survey</span>
-                <div class="button-glow"></div>
-            </button>
-            
-            <div class="timer-info" id="timerInfo" style="display: none;">
-                <div class="timer-display">
-                    <i class="fas fa-stopwatch"></i>
-                    <span>Timer Started: </span>
-                    <span id="startTime"></span>
+            <div class="email-input-section">
+                <label class="email-label">
+                    <i class="fas fa-envelope"></i>
+                    Your Email Address
+                </label>
+                <input type="email" id="userEmail" class="email-input" placeholder="Enter your email address" required>
+                <div class="email-help">
+                    This helps us connect your timing data with your survey responses
                 </div>
-                <div class="session-id">
-                    Session: <span id="sessionId"></span>
+            </div>
+
+            <div style="text-align: center;">
+                <button id="startSurveyBtn" class="start-button">
+                    <i class="fas fa-play"></i>
+                    <span>Start Survey</span>
+                </button>
+                
+                <div class="timer-info" id="timerInfo">
+                    <div class="timer-display">
+                        <i class="fas fa-stopwatch"></i>
+                        <span>Timer Started: </span>
+                        <span id="startTime"></span>
+                    </div>
+                    <div>Session: <span id="sessionId"></span></div>
+                    <div>Email: <span id="displayEmail"></span></div>
                 </div>
             </div>
         </div>
 
-        <!-- Success Modal -->
         <div class="success-modal" id="successModal">
             <div class="modal-content">
-                <div class="success-animation">
-                    <div class="checkmark">
-                        <i class="fas fa-check"></i>
-                    </div>
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
                 </div>
                 <h2>Thank You!</h2>
-                <p>Your form has been submitted successfully.</p>
+                <p>Your survey has been completed successfully.</p>
                 <div class="completion-stats">
                     <div class="stat-item">
                         <div class="stat-label">Completion Time</div>
                         <div class="stat-value" id="completionTime">--:--</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">Session ID</div>
-                        <div class="stat-value" id="completionSession">--</div>
+                        <div class="stat-label">Email</div>
+                        <div class="stat-value" id="completionEmail">--</div>
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button id="closeModalBtn" class="close-button">
-                        <i class="fas fa-home"></i>
-                        Close
-                    </button>
-                </div>
+                <button id="closeModalBtn" class="close-button">
+                    <i class="fas fa-home"></i>
+                    Close
+                </button>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
     <script>
-        // Main page specific JavaScript
+        // Configuration - Replace with your Google Sheet ID
+        const TIMING_SHEET_ID = 'YOUR_TIMING_SHEET_ID_HERE'; // Replace this
+        const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSe98h8JuwgdzUlauVykobND66yGuOqiEEpyl913QP4NJ40DrA/viewform';
+
         let surveyStartTime = null;
         let sessionId = null;
+        let userEmail = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             const startBtn = document.getElementById('startSurveyBtn');
+            const emailInput = document.getElementById('userEmail');
             const timerInfo = document.getElementById('timerInfo');
             
             // Check if returning from form submission
             checkForCompletion();
             
             startBtn.addEventListener('click', function() {
-                startSurvey();
+                const email = emailInput.value.trim();
+                if (!email || !email.includes('@')) {
+                    alert('Please enter a valid email address');
+                    emailInput.focus();
+                    return;
+                }
+                startSurvey(email);
+            });
+
+            // Enable/disable start button based on email input
+            emailInput.addEventListener('input', function() {
+                const email = this.value.trim();
+                startBtn.disabled = !email || !email.includes('@');
             });
             
             document.getElementById('closeModalBtn').addEventListener('click', function() {
@@ -145,55 +361,153 @@
             });
         });
 
-        function startSurvey() {
-            // Generate session ID and start time
+        function startSurvey(email) {
+            userEmail = email;
             sessionId = 'survey_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
             surveyStartTime = new Date();
             
             // Store in localStorage
             localStorage.setItem('surveyStartTime', surveyStartTime.toISOString());
             localStorage.setItem('sessionId', sessionId);
+            localStorage.setItem('userEmail', userEmail);
             localStorage.setItem('surveyActive', 'true');
             
             // Update UI
             document.getElementById('startTime').textContent = surveyStartTime.toLocaleTimeString();
             document.getElementById('sessionId').textContent = sessionId.substr(-8);
+            document.getElementById('displayEmail').textContent = userEmail;
             document.getElementById('timerInfo').style.display = 'block';
             
-            // Redirect to form page
-            window.location.href = 'form.html';
-        }
-
-        function checkForCompletion() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('completed') === 'true') {
-                const completionTime = urlParams.get('time');
-                const sessionId = urlParams.get('session');
-                
-                if (completionTime && sessionId) {
-                    showSuccessModal(completionTime, sessionId);
-                }
-                
-                // Clean up URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        }
-
-        function showSuccessModal(timeStr, sessionStr) {
-            document.getElementById('completionTime').textContent = timeStr;
-            document.getElementById('completionSession').textContent = sessionStr.substr(-8);
-            document.getElementById('successModal').classList.add('show');
+            // Record start time to Google Sheets
+            recordTimingData('started');
             
-            // Clean up localStorage
+            // Open form in new tab
+            window.open(FORM_URL, '_blank');
+            
+            // Show instructions
+            alert('Form opened in new tab. After submitting, come back to this page and click "I completed the survey" below.');
+            
+            // Add completion button
+            addCompletionButton();
+        }
+
+        function addCompletionButton() {
+            const container = document.querySelector('.instructions-card');
+            const completionDiv = document.createElement('div');
+            completionDiv.id = 'completionSection';
+            completionDiv.style.cssText = `
+                margin-top: 30px;
+                padding: 20px;
+                background: #e8f5e8;
+                border-radius: 15px;
+                text-align: center;
+                border: 2px solid #34a853;
+            `;
+            completionDiv.innerHTML = `
+                <h3 style="color: #137333; margin-bottom: 15px;">
+                    <i class="fas fa-check-circle"></i> Survey Submitted?
+                </h3>
+                <p style="margin-bottom: 20px; color: #137333;">
+                    Click the button below after you've submitted the form
+                </p>
+                <button id="completedBtn" style="
+                    background: #34a853;
+                    color: white;
+                    border: none;
+                    padding: 15px 30px;
+                    border-radius: 25px;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                ">
+                    <i class="fas fa-check"></i> I Completed the Survey
+                </button>
+            `;
+            
+            container.appendChild(completionDiv);
+            
+            document.getElementById('completedBtn').addEventListener('click', function() {
+                handleFormCompletion();
+            });
+        }
+
+        function handleFormCompletion() {
+            if (!surveyStartTime) return;
+
+            const endTime = new Date();
+            const totalSeconds = Math.floor((endTime - surveyStartTime) / 1000);
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            const timeString = `${mins}m ${secs}s`;
+
+            // Record completion time
+            recordTimingData('completed', endTime, totalSeconds);
+
+            // Show success modal
+            showSuccessModal(timeString, userEmail);
+
+            // Clean up
             localStorage.removeItem('surveyStartTime');
             localStorage.removeItem('sessionId');
+            localStorage.removeItem('userEmail');
             localStorage.removeItem('surveyActive');
+        }
+
+        function recordTimingData(status, endTime = null, totalSeconds = null) {
+            const data = {
+                timestamp: new Date().toISOString(),
+                email: userEmail,
+                sessionId: sessionId,
+                startTime: surveyStartTime.toISOString(),
+                endTime: endTime ? endTime.toISOString() : '',
+                timeTakenSeconds: totalSeconds || 0,
+                timeTakenMinutes: totalSeconds ? (totalSeconds / 60).toFixed(2) : '0.00',
+                deviceInfo: `${navigator.userAgent} | ${screen.width}x${screen.height}`,
+                status: status
+            };
+
+            // Store locally as backup
+            localStorage.setItem('timingData_' + sessionId, JSON.stringify(data));
+
+            // You can add Google Sheets API call here if needed
+            console.log('Timing data recorded:', data);
+        }
+
+        function showSuccessModal(timeStr, email) {
+            document.getElementById('completionTime').textContent = timeStr;
+            document.getElementById('completionEmail').textContent = email;
+            document.getElementById('successModal').classList.add('show');
         }
 
         function resetSurvey() {
             document.getElementById('timerInfo').style.display = 'none';
+            document.getElementById('userEmail').value = '';
+            document.getElementById('startSurveyBtn').disabled = true;
+            
+            const completionSection = document.getElementById('completionSection');
+            if (completionSection) {
+                completionSection.remove();
+            }
+            
             surveyStartTime = null;
             sessionId = null;
+            userEmail = null;
+        }
+
+        function checkForCompletion() {
+            // Check if user is returning from form
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('completed') === 'true') {
+                const completionTime = urlParams.get('time');
+                const email = urlParams.get('email');
+                
+                if (completionTime && email) {
+                    showSuccessModal(completionTime, email);
+                }
+                
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
         }
     </script>
 </body>
