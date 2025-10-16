@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Research Survey - Timed Form</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="hero-content">
+                <div class="hero-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h1 class="hero-title">Research Survey</h1>
+                <p class="hero-subtitle">Help us improve by sharing your valuable feedback</p>
+                <div class="hero-features">
+                    <div class="feature-item">
+                        <i class="fas fa-clock"></i>
+                        <span>5-10 minutes</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Anonymous & Secure</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Mobile Friendly</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions Section -->
+        <div class="instructions-section">
+            <div class="instructions-card">
+                <h2><i class="fas fa-info-circle"></i> How it works</h2>
+                <div class="instructions-grid">
+                    <div class="instruction-item">
+                        <div class="instruction-number">1</div>
+                        <div class="instruction-content">
+                            <h3>Start Survey</h3>
+                            <p>Click the button below to begin. Timer starts automatically.</p>
+                        </div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-number">2</div>
+                        <div class="instruction-content">
+                            <h3>Complete Form</h3>
+                            <p>Fill out all required fields at your own pace.</p>
+                        </div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-number">3</div>
+                        <div class="instruction-content">
+                            <h3>Submit & Return</h3>
+                            <p>Submit the form and return here to see your completion time.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Section -->
+        <div class="action-section">
+            <div class="privacy-notice">
+                <i class="fas fa-lock"></i>
+                <p>Your completion time will be recorded for research purposes. All responses are confidential.</p>
+            </div>
+            
+            <button id="startSurveyBtn" class="start-button">
+                <i class="fas fa-play"></i>
+                <span>Start Survey</span>
+                <div class="button-glow"></div>
+            </button>
+            
+            <div class="timer-info" id="timerInfo" style="display: none;">
+                <div class="timer-display">
+                    <i class="fas fa-stopwatch"></i>
+                    <span>Timer Started: </span>
+                    <span id="startTime"></span>
+                </div>
+                <div class="session-id">
+                    Session: <span id="sessionId"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <div class="success-modal" id="successModal">
+            <div class="modal-content">
+                <div class="success-animation">
+                    <div class="checkmark">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+                <h2>Thank You!</h2>
+                <p>Your form has been submitted successfully.</p>
+                <div class="completion-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Completion Time</div>
+                        <div class="stat-value" id="completionTime">--:--</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Session ID</div>
+                        <div class="stat-value" id="completionSession">--</div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="closeModalBtn" class="close-button">
+                        <i class="fas fa-home"></i>
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Main page specific JavaScript
+        let surveyStartTime = null;
+        let sessionId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.getElementById('startSurveyBtn');
+            const timerInfo = document.getElementById('timerInfo');
+            
+            // Check if returning from form submission
+            checkForCompletion();
+            
+            startBtn.addEventListener('click', function() {
+                startSurvey();
+            });
+            
+            document.getElementById('closeModalBtn').addEventListener('click', function() {
+                document.getElementById('successModal').classList.remove('show');
+                resetSurvey();
+            });
+        });
+
+        function startSurvey() {
+            // Generate session ID and start time
+            sessionId = 'survey_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+            surveyStartTime = new Date();
+            
+            // Store in localStorage
+            localStorage.setItem('surveyStartTime', surveyStartTime.toISOString());
+            localStorage.setItem('sessionId', sessionId);
+            localStorage.setItem('surveyActive', 'true');
+            
+            // Update UI
+            document.getElementById('startTime').textContent = surveyStartTime.toLocaleTimeString();
+            document.getElementById('sessionId').textContent = sessionId.substr(-8);
+            document.getElementById('timerInfo').style.display = 'block';
+            
+            // Redirect to form page
+            window.location.href = 'form.html';
+        }
+
+        function checkForCompletion() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('completed') === 'true') {
+                const completionTime = urlParams.get('time');
+                const sessionId = urlParams.get('session');
+                
+                if (completionTime && sessionId) {
+                    showSuccessModal(completionTime, sessionId);
+                }
+                
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        function showSuccessModal(timeStr, sessionStr) {
+            document.getElementById('completionTime').textContent = timeStr;
+            document.getElementById('completionSession').textContent = sessionStr.substr(-8);
+            document.getElementById('successModal').classList.add('show');
+            
+            // Clean up localStorage
+            localStorage.removeItem('surveyStartTime');
+            localStorage.removeItem('sessionId');
+            localStorage.removeItem('surveyActive');
+        }
+
+        function resetSurvey() {
+            document.getElementById('timerInfo').style.display = 'none';
+            surveyStartTime = null;
+            sessionId = null;
+        }
+    </script>
+</body>
+</html>
