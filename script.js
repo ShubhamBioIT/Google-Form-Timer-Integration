@@ -112,20 +112,35 @@ const API = {
     // Send timing data to Google Apps Script
     sendTimingData: async (timingData) => {
         try {
+            console.log('Sending timing data:', timingData);
+            
             const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     action: 'recordTiming',
-                    data: timingData
+                    sessionId: timingData.sessionId,
+                    startTime: timingData.startTime,
+                    endTime: timingData.endTime,
+                    timeTakenSeconds: timingData.timeTakenSeconds,
+                    timeTakenMinutes: timingData.timeTakenMinutes,
+                    userAgent: timingData.userAgent,
+                    screenSize: timingData.screenSize
                 })
             });
 
-            console.log('Timing data sent successfully');
-            return { success: true };
+            console.log('Response status:', response.status);
+            
+            if (response.ok) {
+                const result = await response.text();
+                console.log('Success response:', result);
+                return { success: true, data: result };
+            } else {
+                throw new Error('HTTP ' + response.status);
+            }
+            
         } catch (error) {
             console.error('Error sending timing data:', error);
             
